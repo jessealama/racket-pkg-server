@@ -1,4 +1,6 @@
 #!/bin/sh
 sv start pkg-index || exit 1
 sv start racket-pkg-website || exit 1
-exec tail -F -n 0 /var/log/pkgserver/*/current
+exec tail -F -n 0 \
+     /var/log/pkgserver/pkg-index/current \
+     /var/log/pkgserver/racket-pkg-website/current
