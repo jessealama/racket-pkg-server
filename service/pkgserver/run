@@ -1,4 +1,5 @@
 #!/bin/sh
-make -C /usr/local/racket-pkg-website keys
+cd /usr/local/racket-pkg-website
+make keys
 export CONFIG=docker
-exec /sbin/setuser pkgserver /bin/sh -c 'cd /usr/local/racket-pkg-website; ./run'
+exec /sbin/setuser pkgserver ./run
