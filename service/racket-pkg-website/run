@@ -1,6 +1,7 @@
 #!/bin/sh
 cd /usr/local/racket-pkg-website
-make keys
+ln -sf /var/lib/pkgserver/pkg-index/private-key.pem .
+ln -sf /var/lib/pkgserver/pkg-index/server-cert.pem .
 export CONFIG=docker
 chown -R pkgserver:pkgserver /var/lib/pkgserver
 exec /sbin/setuser pkgserver ./run
