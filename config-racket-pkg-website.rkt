@@ -4,10 +4,10 @@
 (define var "/var/lib/pkgserver")
 (main (hash 'reloadable? #t
             'var-path var
-            ;; 'package-index-url "https://localhost:8444/pkgs-all.json.gz"
+            'package-index-url "https://localhost:9004/pkgs-all.json.gz"
             'static-content-target-directory (build-path var "public_html/pkg-catalog-static")
             ;; 'static-urlprefix "https://localhost/~tonyg/pkg-catalog-static"
             ;; 'dynamic-urlprefix "https://localhost:8444"
-            ;; 'backend-baseurl "https://localhost:8445"
-            ;; 'extra-static-content-directories (list (build-path var "public_html/pkg-index-static"))
+            'backend-baseurl "https://localhost:9004"
+            'extra-static-content-directories (list (build-path var "public_html/pkg-index-static"))
             ))
