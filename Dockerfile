@@ -39,14 +39,18 @@ RUN apt-get -y autoremove --purge gcc libc6-dev
 RUN raco pkg install -i git://github.com/tonyg/racket-reloadable#cae2a141955bc2e0d068153f2cd07f88e6a6e9ef
 RUN git clone git://github.com/tonyg/racket-pkg-website /usr/local/racket-pkg-website
 
+# Apache reverse-proxies to pkg-index and racket-pkg-website.
+RUN apt-get -y install apache2
+RUN a2dissite 000-default && a2enmod ssl proxy proxy_http
+
 # Configure services
 RUN mkdir -p /var/lib/pkgserver && chown -R pkgserver:pkgserver /var/lib/pkgserver
 COPY service/ /etc/service/
 COPY config-racket-pkg-website.rkt /usr/local/racket-pkg-website/configs/docker.rkt
 COPY config-pkg-index.rkt /usr/local/pkg-index/official/configs/docker.rkt
-
-# racket-pkg-website, pkg-index respectively. Both HTTPS.
-EXPOSE 8443 9004
+COPY config-apache-proxy.conf /etc/apache2/sites-available/apache-proxy.conf
+RUN a2ensite apache-proxy
+EXPOSE 443
 
 # Set runit to be the main init process, and clean up after apt
 CMD ["/sbin/my_init"]

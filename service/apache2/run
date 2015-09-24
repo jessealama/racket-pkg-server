@@ -1,0 +1,5 @@
+#!/bin/sh
+. /etc/apache2/envvars
+mkdir -p /var/lock/apache2 /var/run/apache2
+chown -R www-data:www-data /var/lock/apache2 /var/run/apache2
+exec /usr/sbin/apache2 -k start -DNO_DETACH
