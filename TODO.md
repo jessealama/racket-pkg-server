@@ -16,8 +16,7 @@ BUG: using apache as a reverse-proxy causes logging of requests
 including credentials. Need to alter the API to require a basic-auth
 header instead.
 
-BUG: racket-pkg-website shows deps such as `(aws #hasheq((kw .
-version)) 1.6)`, seen on plt-service-monitor, as their literal string
-representation. It should just use `aws`.
+Make the static 404 page for missing packages use a temporary
+redirect, if possible, via .htaccess configuration.
 
 Document the lot
