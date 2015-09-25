@@ -7,12 +7,11 @@ RUN printf 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";\n' > /etc/a
 # Curl seems to be part of the baseimage, but it doesn't hurt to check
 RUN apt-get -y update && apt-get -y install curl
 
-# Packages not part of baseimage
-RUN apt-get -y install git make ssmtp rsync
-
-# Configure website user and service startup script
-RUN groupadd -f pkgserver
-RUN useradd -r -s /bin/false -g pkgserver pkgserver
+# Packages not part of baseimage.
+# Apache reverse-proxies to pkg-index and racket-pkg-website.
+# For some of the Racket packages we want to install, we will need a compiler.
+# We remove the compiler again later.
+RUN apt-get -y install git make ssmtp rsync apache2 gcc libc6-dev
 
 # Install a specific snapshot of racket
 ENV racket_snapshot 20150923-aaf098f
@@ -21,35 +20,31 @@ RUN curl http://www.cs.utah.edu/plt/snapshots/${racket_snapshot}/installers/min-
 RUN printf 'no\n/usr/local/racket\n/usr/local/\n' | sh /root/racket-installer.sh
 RUN rm /root/racket-installer.sh
 
-# For some of the Racket packages we want to install, we will need a compiler.
-# We remove the compiler again later.
-RUN apt-get -y install gcc libc6-dev
-
 # Install base racket dependencies needed for our services
 RUN raco pkg install --auto -i base web-server-lib dynext-lib
 
-# Install package catalog server code
+# Install package catalog server dependencies
 RUN raco pkg install -n bcrypt -i git://github.com/samth/bcrypt.rkt#2c85f7e87e4460e892bba8e31271c44bb480c46f
-RUN git clone -b configurable git://github.com/tonyg/pkg-index /usr/local/pkg-index
+
+# Install website dependencies
+RUN raco pkg install -i git://github.com/tonyg/racket-reloadable#cae2a141955bc2e0d068153f2cd07f88e6a6e9ef
 
 # Remove the compiler we installed above.
 RUN apt-get -y autoremove --purge gcc libc6-dev
 
-# Install website code
-RUN raco pkg install -i git://github.com/tonyg/racket-reloadable#cae2a141955bc2e0d068153f2cd07f88e6a6e9ef
+# Install code for package catalog server and website
+RUN git clone -b configurable git://github.com/tonyg/pkg-index /usr/local/pkg-index
 RUN git clone git://github.com/tonyg/racket-pkg-website /usr/local/racket-pkg-website
 
-# Apache reverse-proxies to pkg-index and racket-pkg-website.
-RUN apt-get -y install apache2
-RUN a2dissite 000-default && a2enmod ssl proxy proxy_http
-
 # Configure services
+RUN groupadd -f pkgserver
+RUN useradd -r -s /bin/false -g pkgserver pkgserver
 RUN mkdir -p /var/lib/pkgserver && chown -R pkgserver:pkgserver /var/lib/pkgserver
 COPY service/ /etc/service/
 COPY config-racket-pkg-website.rkt /usr/local/racket-pkg-website/configs/docker.rkt
 COPY config-pkg-index.rkt /usr/local/pkg-index/official/configs/docker.rkt
 COPY config-apache-proxy.conf /etc/apache2/sites-available/apache-proxy.conf
-RUN a2ensite apache-proxy
+RUN a2dissite 000-default && a2enmod ssl proxy proxy_http && a2ensite apache-proxy
 EXPOSE 443
 
 # Set runit to be the main init process, and clean up after apt
