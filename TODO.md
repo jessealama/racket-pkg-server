@@ -16,7 +16,4 @@ BUG: using apache as a reverse-proxy causes logging of requests
 including credentials. Need to alter the API to require a basic-auth
 header instead.
 
-Make the static 404 page for missing packages use a temporary
-redirect, if possible, via .htaccess configuration.
-
 Document the lot
