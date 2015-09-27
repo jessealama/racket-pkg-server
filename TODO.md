@@ -12,8 +12,4 @@ Set up email for new user accounts
 
 BUG?: pkg-index accepts email addresses with no domain, i.e. addresses for machine users.
 
-BUG: using apache as a reverse-proxy causes logging of requests
-including credentials. Need to alter the API to require a basic-auth
-header instead.
-
 Document the lot
