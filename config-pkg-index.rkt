@@ -13,7 +13,7 @@
               (printf "Would redirect to static version of ~a\n"
                       (url->string (request-uri req)))
               (redirect-to "http://localhost/~tonyg/pkg-catalog-static/FIXME"))
-            'email-sender-address "tonyg@racket-lang.org"
+            'email-sender-address "The Beta Racket Package Server <new-pkg-server-beta@racket-lang.org>"
             'atom-package-url-format-string
               "https://localhost/~~tonyg/pkg-catalog-static/package/~a"
             ))

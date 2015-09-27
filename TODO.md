@@ -8,8 +8,6 @@ Install the plt-service-monitor package.
 
 Make heartbeat script (pkg-index/official/beat-update.sh) use the right racket installation.
 
-Set up email for new user accounts
-
 BUG?: pkg-index accepts email addresses with no domain, i.e. addresses for machine users.
 
 Document the lot

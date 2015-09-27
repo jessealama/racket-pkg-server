@@ -11,7 +11,7 @@ RUN apt-get -y update && apt-get -y install curl
 # Apache reverse-proxies to pkg-index and racket-pkg-website.
 # For some of the Racket packages we want to install, we will need a compiler.
 # We remove the compiler again later.
-RUN apt-get -y install git make ssmtp rsync apache2 gcc libc6-dev
+RUN apt-get -y install git make exim4 rsync apache2 gcc libc6-dev
 
 # Install a specific snapshot of racket
 ENV racket_snapshot 20150923-aaf098f
@@ -46,6 +46,10 @@ COPY config-pkg-index.rkt /usr/local/pkg-index/official/configs/docker.rkt
 COPY config-apache-proxy.conf /etc/apache2/sites-available/apache-proxy.conf
 RUN a2dissite 000-default && a2enmod ssl proxy proxy_http && a2ensite apache-proxy
 EXPOSE 443
+
+# Email-sending
+COPY update-exim4.conf.conf /etc/exim4/update-exim4.conf.conf
+RUN echo 'pkgd.racket-lang.org' > /etc/mailname; update-exim4.conf
 
 # Set runit to be the main init process, and clean up after apt
 CMD ["/sbin/my_init"]
