@@ -13,3 +13,9 @@ Set up email for new user accounts
 BUG?: pkg-index accepts email addresses with no domain, i.e. addresses for machine users.
 
 Document the lot
+
+Make the URLs nice.
+
+convert modify-all API from jsonp to plain json
+
+Figure out a way to nicely support the various racket-pkg-website signals.
