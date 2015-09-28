@@ -17,3 +17,5 @@ Make the URLs nice.
 convert modify-all API from jsonp to plain json
 
 Figure out a way to nicely support the various racket-pkg-website signals.
+
+Remove now-unused portions of the catalog API
