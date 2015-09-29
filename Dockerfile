@@ -16,7 +16,7 @@ RUN apt-get -y install git make exim4 rsync apache2 gcc libc6-dev
 # Install a specific snapshot of racket
 ENV racket_snapshot 20150923-aaf098f
 ENV racket_version 6.2.900.17
-RUN curl http://www.cs.utah.edu/plt/snapshots/${racket_snapshot}/installers/min-racket-${racket_version}-x86_64-linux-precise.sh > /root/racket-installer.sh
+RUN curl -f http://www.cs.utah.edu/plt/snapshots/${racket_snapshot}/installers/min-racket-${racket_version}-x86_64-linux-precise.sh > /root/racket-installer.sh
 RUN printf 'no\n/usr/local/racket\n/usr/local/\n' | sh /root/racket-installer.sh
 RUN rm /root/racket-installer.sh
 
