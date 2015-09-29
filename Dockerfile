@@ -25,6 +25,8 @@ RUN raco pkg install --auto -i base web-server-lib dynext-lib
 
 # Install package catalog server dependencies
 RUN raco pkg install -n bcrypt -i git://github.com/samth/bcrypt.rkt#2c85f7e87e4460e892bba8e31271c44bb480c46f
+# This package transitively depends on a LOT of other stuff. TODO: simplify
+RUN raco pkg install --auto -i plt-service-monitor
 
 # Install website dependencies
 RUN raco pkg install -i git://github.com/tonyg/racket-reloadable#cae2a141955bc2e0d068153f2cd07f88e6a6e9ef
@@ -38,7 +40,7 @@ RUN git clone git://github.com/tonyg/racket-pkg-website /usr/local/racket-pkg-we
 
 # Configure services
 RUN groupadd -f pkgserver
-RUN useradd -r -s /bin/false -g pkgserver pkgserver
+RUN useradd -r -s /bin/false -d /var/lib/pkgserver -g pkgserver pkgserver
 RUN mkdir -p /var/lib/pkgserver && chown -R pkgserver:pkgserver /var/lib/pkgserver
 COPY service/ /etc/service/
 COPY config-racket-pkg-website.rkt /usr/local/racket-pkg-website/configs/docker.rkt

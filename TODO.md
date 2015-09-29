@@ -1,12 +1,4 @@
-Install the plt-service-monitor package.
- - it's on the package catalog
- - it has deps on a few things
- - but they transitively have deps on a shitload of stuff, including most of the documentation.
- - it MIGHT be possible to ignore some of the deps during installation.
-    - raco pkg install -i --deps force plt-service-monitor ...
-    - would have to manually track the deps I need to get beat-update.sh to run right
-
-Make heartbeat script (pkg-index/official/beat-update.sh) use the right racket installation.
+Reduce dependencies needed to heartbeat; currently done with the plt-service-monitor package.
 
 BUG?: pkg-index accepts email addresses with no domain, i.e. addresses for machine users.
 
