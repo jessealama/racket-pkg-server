@@ -1,4 +1,7 @@
 Reduce dependencies needed to heartbeat; currently done with the plt-service-monitor package.
+  - aws depends on http and sha; this seems reasonable
+  - perhaps directly reimplement the heartbeating facility from
+    plt-service-monitor, since that depends only on aws?
 
 BUG?: pkg-index accepts email addresses with no domain, i.e. addresses for machine users.
 
@@ -14,3 +17,9 @@ Remove now-unused portions of the catalog API
 
 Put search-completions, tag-search-completions, formal-tags into the
 static part of the site.
+
+Logging: take all warnings and errors, and forward them somewhere.
+Email? XMPP? IRC? A special log file?
+
+Change package-not-found error pages to just a generic error page. S3
+can't use .htaccess.
