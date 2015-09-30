@@ -4,11 +4,19 @@
 (define var "/var/lib/pkgserver")
 (main (hash 'reloadable? #t
             'var-path var
-            ;; 'package-index-url "https://localhost:9004/pkgs-all.json.gz"
             'package-index-url "file:///var/lib/pkgserver/public_html/pkg-index-static/pkgs-all.json.gz"
-            'static-content-target-directory (build-path var "public_html/pkg-catalog-static")
-            ;; 'static-urlprefix "https://localhost/~tonyg/pkg-catalog-static"
-            'dynamic-urlprefix "/catalog"
             'backend-baseurl "https://localhost:9004"
-            'extra-static-content-directories (list (build-path var "public_html/pkg-index-static"))
+            'pkg-index-generated-directory (build-path var "public_html/pkg-index-static")
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ;; Either:
+            'static-output-type 'file
+            'static-content-target-directory (build-path var "public_html/pkg-catalog-static")
+            'static-urlprefix ""
+            'dynamic-urlprefix "/catalog"
+            ;; Or:
+            ;; 'static-output-type 'aws-s3
+            ;; 'aws-s3-bucket+path "pkgs.leastfixedpoint.com/"
+            ;; 'static-urlprefix "http://pkgs.leastfixedpoint.com"
+            ;; 'dynamic-urlprefix "https://pkgd.leastfixedpoint.com"
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ))
