@@ -23,3 +23,5 @@ Email? XMPP? IRC? A special log file?
 
 Change package-not-found error pages to just a generic error page. S3
 can't use .htaccess.
+
+Move github readme check out of render and into elaboration.
