@@ -117,6 +117,16 @@ bucket and to list the contents of the bucket. The second two stanzas
 delete and list permissions to our `pkgserver` IAM user. Note the ARN
 in the `Principal` clauses.
 
+### Set up DNS
+
+Make sure your *static* hostname is CNAME for S3; in my case, I had
+`pkgs.leastfixedpoint.com` CNAME for
+`pkgs.leastfixedpoint.com.s3-website-us-east-1.amazonaws.com`.
+
+Make sure your *dynamic* hostname points at the machine the Docker
+container will be running on. Only port 443 (HTTPS) needs to be
+accessible at the corresponding IP.
+
 ### Alter the container's configuration
 
 Follow the instructions in
