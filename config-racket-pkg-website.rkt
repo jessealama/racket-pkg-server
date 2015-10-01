@@ -8,15 +8,22 @@
             'backend-baseurl "https://localhost:9004"
             'pkg-index-generated-directory (build-path var "public_html/pkg-index-static")
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-            ;; Either:
+            ;; To configure a split, S3-based setup, comment out the following lines:
+            ;;
             'static-output-type 'file
             'static-content-target-directory (build-path var "public_html/pkg-catalog-static")
             'static-urlprefix ""
             'dynamic-urlprefix "/catalog"
-            ;; Or:
+            ;;
+            ;; ... and uncomment and adjust these instead:
+            ;;
             ;; 'static-output-type 'aws-s3
             ;; 'aws-s3-bucket+path "pkgs.leastfixedpoint.com/"
             ;; 'static-urlprefix "http://pkgs.leastfixedpoint.com"
             ;; 'dynamic-urlprefix "https://pkgd.leastfixedpoint.com"
+            ;;
+            ;; Make sure to *include* a slash at the end of
+            ;; aws-s3-bucket+path, and to *exclude* a slash from the
+            ;; end of both static-urlprefix and dynamic-urlprefix.
             ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
             ))
