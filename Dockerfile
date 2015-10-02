@@ -4,14 +4,12 @@ FROM phusion/baseimage:0.9.17
 # Turn off recommended packages
 RUN printf 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";\n' > /etc/apt/apt.conf.d/99norecommends
 
-# Curl seems to be part of the baseimage, but it doesn't hurt to check
-RUN apt-get -y update && apt-get -y install curl
-
-# Packages not part of baseimage.
-# Apache reverse-proxies to pkg-index and racket-pkg-website.
-# For some of the Racket packages we want to install, we will need a compiler.
-# We remove the compiler again later.
-RUN apt-get -y install git make exim4 rsync apache2 gcc libc6-dev
+# Curl seems to be part of the baseimage, but it doesn't hurt to check.
+# Packages not part of baseimage:
+#  - Apache reverse-proxies to pkg-index and racket-pkg-website.
+#  - For some of the Racket packages we want to install, we will need a compiler.
+#    We remove the compiler again later.
+RUN apt-get -y update && apt-get -y install curl git make exim4 rsync apache2 gcc libc6-dev
 
 # Install a specific snapshot of racket
 ENV racket_snapshot 20150928-dfef5b4
