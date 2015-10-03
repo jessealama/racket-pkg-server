@@ -13,15 +13,7 @@ convert modify-all API from jsonp to plain json
 
 Figure out a way to nicely support the various racket-pkg-website signals.
 
-Remove now-unused portions of the catalog API
-
-Put search-completions, tag-search-completions, formal-tags into the
-static part of the site.
-
 Logging: take all warnings and errors, and forward them somewhere.
 Email? XMPP? IRC? A special log file?
-
-Change package-not-found error pages to just a generic error page. S3
-can't use .htaccess.
 
 Move github readme check out of render and into elaboration.
