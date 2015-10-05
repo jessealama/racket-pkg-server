@@ -17,3 +17,5 @@ Logging: take all warnings and errors, and forward them somewhere.
 Email? XMPP? IRC? A special log file?
 
 Move github readme check out of render and into elaboration.
+
+Add a robots.txt that prevents crawling of the dynamic parts of the service.
