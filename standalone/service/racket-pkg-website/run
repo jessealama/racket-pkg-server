@@ -2,4 +2,4 @@
 . $HOME/setup-env
 cd $HOME/racket-pkg-website
 export CONFIG=live
-exec ./run
+exec ./run 2>&1
