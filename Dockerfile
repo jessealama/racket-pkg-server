@@ -1,5 +1,5 @@
 # -*- shell-script -*-
-FROM phusion/baseimage:0.9.17
+FROM phusion/baseimage:0.9.19
 
 # Turn off recommended packages
 RUN printf 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";\n' > /etc/apt/apt.conf.d/99norecommends
@@ -11,10 +11,16 @@ RUN printf 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";\n' > /etc/a
 #    We remove the compiler again later.
 RUN apt-get -y update && apt-get -y install curl git make exim4 rsync apache2 gcc libc6-dev
 
-# Install a specific snapshot of racket
-ENV racket_snapshot 20150928-dfef5b4
-ENV racket_version 6.2.900.17
-RUN curl -f http://www.cs.utah.edu/plt/snapshots/${racket_snapshot}/installers/min-racket-${racket_version}-x86_64-linux-precise.sh > /root/racket-installer.sh
+###########################################################################
+# # Install a specific snapshot of racket
+# ENV racket_snapshot 20150928-dfef5b4
+# ENV racket_version 6.2.900.17
+# RUN curl -f http://www.cs.utah.edu/plt/snapshots/${racket_snapshot}/installers/min-racket-${racket_version}-x86_64-linux-precise.sh > /root/racket-installer.sh
+###########################################################################
+ENV racket_version 6.6
+RUN curl -f https://mirror.racket-lang.org/installers/${racket_version}/racket-${racket_version}-x86_64-linux.sh > /root/racket-installer.sh
+###########################################################################
+
 RUN printf 'no\n/usr/local/racket\n/usr/local/\n' | sh /root/racket-installer.sh
 RUN rm /root/racket-installer.sh
 
@@ -22,7 +28,7 @@ RUN rm /root/racket-installer.sh
 RUN raco pkg install --auto -i base web-server-lib dynext-lib
 
 # Install package catalog server dependencies
-RUN raco pkg install -n bcrypt -i git://github.com/samth/bcrypt.rkt#2c85f7e87e4460e892bba8e31271c44bb480c46f
+RUN raco pkg install -n bcrypt -i git://github.com/samth/bcrypt.rkt#94c0018da46d64700bfa549c1146801a8a6db87d
 # This package transitively depends on a LOT of other stuff. TODO: simplify
 RUN raco pkg install --auto -i plt-service-monitor
 

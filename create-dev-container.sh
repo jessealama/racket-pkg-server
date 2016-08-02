@@ -1,6 +1,6 @@
 #!/bin/sh
 exec docker create \
-     -p 8443:443 \
+     -p 7443:443 \
      -v `pwd`/../pkg-index:/usr/local/pkg-index \
      -v `pwd`/../racket-pkg-website:/usr/local/racket-pkg-website \
      -v `pwd`/config-pkg-index.rkt:/usr/local/pkg-index/official/configs/docker.rkt \
