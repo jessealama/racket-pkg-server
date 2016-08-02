@@ -1,0 +1,4 @@
+#!/bin/sh
+. $HOME/setup-env
+cd $HOME/pkg-index/official
+exec racket configs/live.rkt

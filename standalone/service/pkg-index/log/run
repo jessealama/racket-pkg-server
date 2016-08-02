@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+set -x
+mkdir -p main
+chmod a+rx main
+exec multilog t s999999 n500 ./main
