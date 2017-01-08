@@ -1,7 +1,5 @@
 #!/bin/sh
-cd /usr/local/racket-pkg-website
-ln -sf /var/lib/pkgserver/pkg-index/private-key.pem .
-ln -sf /var/lib/pkgserver/pkg-index/server-cert.pem .
-export CONFIG=docker
-chown -R pkgserver:pkgserver /var/lib/pkgserver /usr/local/racket-pkg-website/signals
-exec /sbin/setuser pkgserver ./run
+. $HOME/setup-env
+cd $HOME/racket-pkg-website
+export CONFIG=live
+exec ./run 2>&1

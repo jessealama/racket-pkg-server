@@ -1,0 +1,5 @@
+#!/bin/sh
+LOGDIR=/var/log/pkgserver/racket-pkg-website
+mkdir -p $LOGDIR
+chown -R pkgserver:root $LOGDIR
+exec /sbin/setuser pkgserver svlogd -t $LOGDIR

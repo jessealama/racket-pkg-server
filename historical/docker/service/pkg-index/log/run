@@ -1,0 +1,5 @@
+#!/bin/sh
+LOGDIR=/var/log/pkgserver/pkg-index
+mkdir -p $LOGDIR
+chown -R pkgserver:root $LOGDIR
+exec /sbin/setuser pkgserver svlogd -t $LOGDIR

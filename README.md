@@ -1,198 +1,279 @@
-# Dockerized Racket Package Catalog plus UI
+# The Racket Package Catalog Server
 
-The catalog can run either entirely standalone, using HTTPS uniformly,
-or in a split configuration using S3 via HTTP for static content and
-generating dynamic content solely via HTTPS.
+The Racket Package Catalog comprises two pieces of software that work
+in tandem:
 
-By default, it runs in the standalone configuration.
+ - [`pkg-index`](https://github.com/tonyg/pkg-index/tree/configurable)
+   a.k.a. "the backend"
 
-Important settings to change:
+ - [`racket-pkg-website`](https://github.com/tonyg/racket-pkg-website)
+   a.k.a. "the frontend"
 
- - in `config-pkg-index.rkt`, only `email-sender-address`.
+The backend maintains the core package and user databases, and has a
+JSON-based API. The frontend uses the backend to build and display
+both statically- and dynamically-rendered pretty pages for users to
+look at.
 
- - in `config-racket-pkg-website.rkt` and `config-apache-proxy.conf`,
-   nothing, unless you want to use the split S3-based configuration.
+Roughly speaking, the backend produces artifacts that Racket's package
+management subsystem interacts with, and the frontend produces
+artifacts that humans interact with.
 
- - in `Dockerfile`:
-    - you may need to change the `/etc/mailname` setting (by default
-      `pkgd.racket-lang.org`) to get user registration emails to work.
-    - you may also need to change `racket_snapshot` and
-      `racket_version`, as snapshots expire quite quickly and the one
-      listed may no longer be available.
+In future, the functionality of the backend will likely be
+piece-by-piece moved over to the frontend, at which point we'll have a
+single package catalog server again.
 
-If you have an existing package catalog database you want to use, copy
-its files into the `pkg-index/pkgs` directory as described below in
-the "The Data Directory" section.
+Finally, the documentation you are reading exists in a
+[`racket-pkg-server`](https://github.com/tonyg/racket-pkg-server)
+repository, along with scripts for configuring and deploying catalog
+server instances.
 
-In the standalone configuration, dynamic resource URLS will all have
-`.../catalog/` prefixing them, and static resources are all other
-URLs; in the S3 configuration, two hostnames are used, one for each
-class of resource.
+## Git branches required
 
-## Setting up S3
+The backend is currently deployed from the `configurable` branch
+rather than `master`, which is the original catalog server from before
+the separate frontend was integrated with it.
 
-The software can be configured to use an S3 bucket as a static copy of
-the catalog, backed and managed by the Docker container.
+You will want:
 
-### Know the domain names you'll be using
+ - `configurable` from `pkg-index`
+ - `master` from `racket-pkg-website`
+ - `master` from `racket-pkg-server`
 
-In my case,
- - `pkgs.leastfixedpoint.com` is for the S3 bucket, containing static
-   resources only.
- - `pkgd.leastfixedpoint.com` is for the Docker container's dynamic
-   resources.
+## Base operating system requirements
 
-### Create some IAM keys for the container to use
+A fresh Debian- or Redhat-like Linux instance should work just fine.
 
-In IAM console, under "Users", create a new user. I called mine
-"pkgserver". Save the keys away. You will need to put them in the
-`.aws-keys` file in the data directory later.
+## The `standalone-create.sh` script
 
-In my case, with "pkgserver" as the user name, the ARN corresponding
-to the user is `arn:aws:iam::861438980900:user/pkgserver`. You can
-find this string on the user's own page.
+The script [standalone-create.sh][] performs many of the tasks needed
+to set up a server instance.
 
-### Create and configure the bucket
+**READ IT CAREFULLY BEFORE RUNNING IT.**
 
-I created a bucket called `pkgs.leastfixedpoint.com`.
+In principle, checking out `racket-pkg-server` on a fresh server and
+running `standalone-create.sh` should be enough to get the `pkgserver`
+user created and in good shape. Currently, setup of Apache, the
+firewall, and backups is still a manual task.
 
-Configuring it:
+(See [the dockerized server](historical/docker/) for one possible
+approach to fully automating deployment.)
 
- - Static Website Hosting → Enable website hosting. Set "Index
-   Document" to `index.html`. Set "Error Document" to `not-found`.
+## Users and groups
 
- - Permissions → Edit bucket policy, and paste in something analogous
-   to the following:
+For the live configuration, a special `pkgserver` user owns all the
+relevant files. The service needs no special privileges to run.
 
-		{
-			"Version": "2012-10-17",
-			"Id": "Policy1443561236276",
-			"Statement": [
-				{
-					"Sid": "Stmt1443561886247",
-					"Effect": "Allow",
-					"Principal": "*",
-					"Action": "s3:GetObject",
-					"Resource": "arn:aws:s3:::pkgs.leastfixedpoint.com/*"
-				},
-				{
-					"Sid": "Stmt1443561886247b",
-					"Effect": "Allow",
-					"Principal": "*",
-					"Action": "s3:ListBucket",
-					"Resource": "arn:aws:s3:::pkgs.leastfixedpoint.com"
-				},
-				{
-					"Sid": "Stmt1443561199132",
-					"Effect": "Allow",
-					"Principal": {
-						"AWS": "arn:aws:iam::861438980900:user/pkgserver"
-					},
-					"Action": [
-						"s3:GetObjectTorrent",
-						"s3:GetObjectVersion",
-						"s3:DeleteObject",
-						"s3:DeleteObjectVersion",
-						"s3:GetObject",
-						"s3:PutObject"
-					],
-					"Resource": "arn:aws:s3:::pkgs.leastfixedpoint.com/*"
-				},
-				{
-					"Sid": "Stmt1443561234476",
-					"Effect": "Allow",
-					"Principal": {
-						"AWS": "arn:aws:iam::861438980900:user/pkgserver"
-					},
-					"Action": "s3:ListBucket",
-					"Resource": "arn:aws:s3:::pkgs.leastfixedpoint.com"
-				}
-			]
-		}
+The `pkgserver` user is the (only, initially) member of the group
+`pkgserver`.
 
-Deconstructing that, the first two stanzas (`Stmt1443561886247` and
-`Stmt1443561886247b`) allow anonymous users to read objects in the
-bucket and to list the contents of the bucket. The second two stanzas
-(`Stmt1443561199132` and `Stmt1443561234476`) grant read, write,
-delete and list permissions to our `pkgserver` IAM user. Note the ARN
-in the `Principal` clauses.
+Generally, when editing config files or restarting service processes,
+do so as the `pkgserver` user:
 
-### Set up DNS
+    sudo su -s /bin/bash - pkgserver
 
-Make sure your *static* hostname is CNAME for S3; in my case, I had
-`pkgs.leastfixedpoint.com` CNAME for
-`pkgs.leastfixedpoint.com.s3-website-us-east-1.amazonaws.com`.
+The `-s` argument to `su` is needed because `pkgserver` doesn't have a
+shell.
 
-Make sure your *dynamic* hostname points at the machine the Docker
-container will be running on. Only port 443 (HTTPS) needs to be
-accessible at the corresponding IP.
+## Firewall
 
-### Alter the container's configuration
+The only needed ports are 80 and 443, so that users can connect to the
+Apache reverse proxy. Make sure other ports are closed: in particular,
+do not allow external access to the server processes themselves.
 
-Follow the instructions in
-`/etc/apache2/sites-available/apache-proxy.conf` (a.k.a
-`config-apache-proxy.conf`) and in
-`/usr/local/racket-pkg-website/configs/docker.rkt` (a.k.a
-`config-racket-pkg-website.rkt`).
+## Apache reverse proxy
 
-## The Data Directory
+Apache is used to reverse proxy incoming HTTP(S) requests to the
+actual server processes themselves.
+[Letsencrypt](https://letsencrypt.org/) is used to get the necessary
+SSL certificates.
 
-The container stores most of its important information, including
-keys, databases, and generated HTML, in its `/var/lib/pkgserver`
-directory by default.
+The [apache-pkgd-site.conf][] configuration
+file is installed in Apache's `sites-enabled` directory. It contains
+the mappings from external URLs to internal service URLs.
 
-The scripts `create-dev-container.sh` and `create-live-container.sh`
-use Docker's `-v` option to bind `./data` to the container's
-`/var/lib/pkgserver`.
+## Server processes and process supervision
 
-The structure of `./data`, i.e. `/var/lib/pkgserver`, is as follows:
+The backend and frontend services are automatically started (and
+restarted, if it terminates or crashes) by
+[DJB's daemontools](https://cr.yp.to/daemontools.html).
 
-### Configuration files and credentials (i.e. inputs)
+A symbolic link in `/etc/service` to `~pkgserver/pkgserver-supervisor`
+causes the system-wide daemontools to start up an svscan instance
+specific to the `pkgserver` user. See [standalone-create.sh][] to find
+out how the `pkgserver-supervisor` directory is created and populated.
 
- - `.aws-keys`
-     - used primarily for the S3 static site replication, but also
-       currently needed to do server heartbeating via the
-       `plt-service-monitor` package
-     - see `pkg-index/official/beat-update.sh` and `racket-pkg-website/src/static.rkt`
-     - must contain `AWSAccessKeyId` and `AWSSecretKey` definitions,
-       per the `aws` package's requirements
+The [service][] directory contains the daemontools startup and logging
+scripts that start the backend and frontend processes.
 
- - `pkg-index/client_id`
- - `pkg-index/client_secret`
-     - Github application authentication token ID and Secret, respectively
+In summary:
 
- - `pkg-index/private-key.pem`
- - `pkg-index/server-cert.pem`
-     - HTTPS certificate to use for all services: not just the apache
-       frontend, but also `pkg-index` and `racket-pkg-website`
-       themselves.
+ - The system daemontools supervises
+    - A `pkgserver` user-specific svscan instance, which supervises
+       - `pkg-index`, the backend, and
+       - `racket-pkg-website`, the frontend.
 
-### Database files (i.e. mutable, long-lived, valuable data)
+The backend and frontend both run as the `pkgserver` user by virtue of
+the way the user-specific svscan instance is set up.
 
- - `pkg-index/pkgs`
-     - The master package database directory.
+## Starting and stopping the service
 
- - `pkg-index/users.new`
-     - The master user database directory.
+To do a clean restart of one or the other of the servers,
 
-### Generated files (i.e. outputs)
+    sudo -u pkgserver svc -du /home/pkgserver/service/pkg-index
+    sudo -u pkgserver svc -du /home/pkgserver/service/racket-pkg-website
 
- - `generated-htdocs`
-     - Staging area containing files produced by `racket-pkg-website`
-	 - rsync'd to `pkg-catalog-static` -- see below
+(More info on daemontools's svc program here:
+<https://cr.yp.to/daemontools/svc.html>)
 
- - `pkg-index/cache`
-     - Information retrieved from the `pkg-build` server
+Restarting either of the Racket processes by simply killing it will
+also work OK. The daemontools supervision ensures that they will be
+restarted.
 
- - `public_html/pkg-index-static`
-     - Static HTML/CSS/JS files from `pkg-index`.
-     - rsync'd to `pkg-catalog-static` -- see below
+It is more or less safe to reboot the machine, if that becomes
+necessary.
 
- - `public_html/pkg-catalog-static`
-     - All static files.
-     - Copied from all of:
-        - `pkg-index`'s static files directory
-		- `racket-pkg-website`'s static files directory
-        - `racket-pkg-website`'s dynamically-generated static file staging directory
-     - Files are served by the apache frontend directly from here.
+To bring down a service, use `-d` instead of `-du` as the first
+argument to `svc`. To bring it back up again afterwards, use `-u`.
 
+## Viewing server logs
+
+There are two active logs, plus a bunch of rolled-over log files. The
+active logs are
+
+    /home/pkgserver/service/pkg-index/log/main/current
+    /home/pkgserver/service/racket-pkg-website/log/main/current
+
+Earlier files are adjacent in those directories.
+
+Use [`tai64nlocal`](https://cr.yp.to/daemontools/tai64nlocal.html) as
+a filter to get human-readable timestamps; you can track the files
+with
+
+    tail -F /home/pkgserver/service/*/log/main/current | tai64nlocal
+
+## URL structure
+
+The configuration of the live deployment of the package catalog
+involves many moving pieces:
+
+ - Amazon S3 hosts static backend and frontend resources, served both
+   to Racket instances and to human users.
+
+ - Once a user logs in, they interact with the live frontend server
+   process.
+
+Currently,
+
+ - `https://pkgs.racket-lang.org/` points to the single-page app that
+   was the original user interface to the backend. It is served from
+   S3.
+
+ - `https://pkgn.racket-lang.org/` points to S3-hosted static files
+   from the frontend.
+
+ - `https://pkgd.racket-lang.org/` points to the live server's Apache
+   instance, which reverse-proxies various URLs onto the backend and
+   frontend as per [apache-pkgd-site.conf][].
+     - `/jsonp` and `/api` prefixes go to the backend
+     - `/pkgn` goes to the frontend
+
+So, for example, for a package named `foo`,
+
+ - `https://pkgs.racket-lang.org/pkg/foo` and
+   `https://pkgn.racket-lang.org/pkg/foo` both refer to the
+   Racket-readable information about `foo`
+
+ - `https://pkgn.racket-lang.org/package/foo` is the static user
+   interface to `foo`
+
+ - If the user is logged in,
+   `https://pkgd.racket-lang.org/pkgn/package/foo` is the
+   dynamically-rendered user interface to `foo`, including options to
+   edit or delete the package definition (according to the user's
+   permissions).
+
+ - If the user is *not* logged in,
+   `https://pkgd.racket-lang.org/pkgn/package/foo` will redirect to
+   `https://pkgn.racket-lang.org/package/foo`.
+
+When we switch to using the new frontend by default, we will aim to
+have the following URLs for the static and dynamically-rendered user
+interfaces for a package:
+
+ - `https://pkgs.racket-lang.org/package/foo` for a static-rendered,
+   S3-hosted page
+
+ - `https://pkgd.racket-lang.org/package/foo` for a
+   dynamically-rendered, live-hosted page
+
+Note that at that point, the only difference will be in `pkgs` vs
+`pkgd`.
+
+## Filesystem layout on the live server
+
+ - `/home/pkgserver`
+     - `racket` - the version of Racket used by both the backend and frontend; installed by [standalone-create.sh][]
+     - `pkgserver-supervisor` - daemontools definition of the supervisor for the services in `service`; created by [standalone-create.sh][]
+     - `service` - daemontools startup and logging scripts for the backend and frontend; a copy of [service][]
+         - `pkg-index/log/main` - contains log files for the backend; see below
+         - `racket-pkg-website/log/main` - contains log files for the frontend; see below
+     - `pkg-index` - live checkout of the backend
+     - `racket-pkg-website` - live checkout of the frontend
+ - `/var/lib/pkgserver`
+     - `pkg-index` - databases **AND CRYPTOGRAPHIC SECRETS** used by the backend
+         - `pkgs` - master copy of the package catalog
+         - `users.new` - master copy of the user database
+         - other files documented in the `pkg-index` codebase
+     - `public_html/pkg-index-static` - staging area for resources to be hosted by S3
+
+Note that the important databases are in
+`/var/lib/pkgserver/pkg-index`.
+
+## Backups
+
+`rsnapshot` and `rrsync` (see
+[here](https://www.guyrutenberg.com/2014/01/14/restricting-ssh-access-to-rsync/))
+are used to take periodic backups of the `/var/lib/pkgserver`
+directory.
+
+The file `~/.ssh/authorized_keys` of the `ubuntu` user on the server
+contains (among more conventional entries)
+
+    command="/usr/local/bin/rrsync -ro /var/lib/pkgserver/",no-agent-forwarding,no-port-forwarding,no-pty,no-user-rc,no-X11-forwarding ssh-rsa AAAAB3Nz[...]fvGcW1 tonyg automated remote backup of pkgd 
+
+... which allows me, on my own machine, to run `rsnapshot` from
+`crontab` using the following `/etc/rsnapshot.conf` entry:
+
+    backup  ubuntu@[THE_LIVE_HOSTNAME]:/      pkgd/   ssh_args=-i [FULL_PATH_TO_THE_SSH_PRIVATE_KEY]
+
+Beware that `rsnapshot.conf` is ultra picky about using literal tab
+characters to separate fields.
+
+## Updating the service as you push new code to Github
+
+Become `pkgserver` using
+
+    sudo su -s /bin/bash - pkgserver
+
+Then, either or both of
+
+    (cd pkg-index; git pull)
+    (cd racket-pkg-website; git pull)
+
+Note that because the frontend uses
+[`racket-reloadable`](https://github.com/tonyg/racket-reloadable),
+some changes to the frontend will automatically and immediately go
+live. For larger changes, or for changes to the backend, you will need
+to restart the processes using `svc` as described above.
+
+## tmux convention
+
+I frequently have, under the `ubuntu` user on the server, a `tmux`
+instance running, but it is not essential for operation of the service
+and may be terminated or restarted ad libitum.
+
+
+
+  [apache-pkgd-site.conf]: apache-pkgd-site.conf
+  [standalone-create.sh]: standalone-create.sh
+  [service]: service/

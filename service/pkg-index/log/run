@@ -1,5 +1,6 @@
 #!/bin/sh
-LOGDIR=/var/log/pkgserver/pkg-index
-mkdir -p $LOGDIR
-chown -R pkgserver:root $LOGDIR
-exec /sbin/setuser pkgserver svlogd -t $LOGDIR
+set -e
+set -x
+mkdir -p main
+chmod a+rx main
+exec multilog t s999999 n500 ./main

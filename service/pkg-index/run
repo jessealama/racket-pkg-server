@@ -1,4 +1,4 @@
 #!/bin/sh
-cd /usr/local/pkg-index/official
-chown -R pkgserver:pkgserver /var/lib/pkgserver
-exec /sbin/setuser pkgserver racket configs/docker.rkt
+. $HOME/setup-env
+cd $HOME/pkg-index/official
+exec racket configs/live.rkt 2>&1
