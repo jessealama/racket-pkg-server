@@ -55,6 +55,8 @@ running `standalone-create.sh` should be enough to get the `pkgserver`
 user created and in good shape. Currently, setup of Apache, the
 firewall, and backups is still a manual task.
 
+You will also need to create `~pkgserver/.aws-keys` by hand.
+
 (See [the dockerized server](historical/docker/) for one possible
 approach to fully automating deployment.)
 
@@ -228,6 +230,17 @@ Note that at that point, the only difference will be in `pkgs` vs
 
 Note that the important databases are in
 `/var/lib/pkgserver/pkg-index`.
+
+## Cryptographic secrets
+
+The code needs a few cryptographic secrets to run:
+
+ - `~pkgserver/.aws-keys` contains AWS keys needed to manipulate S3 contents.
+ - `/var/lib/pkgserver/pkg-index/client_{id,secret}` are Github API keys.
+ - `/var/lib/pkgserver/pkg-index/{private-key,server-cert}.pem` are
+   SSL credentials for the HTTPS interface that the Apache reverse
+   proxy backs onto. They do not need to be full SSL certificates; a
+   self-signed key should work fine here.
 
 ## Backups
 
