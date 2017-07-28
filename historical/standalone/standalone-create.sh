@@ -74,7 +74,7 @@ then
   touch package-dependencies-installed
 fi
 
-[ -d pkg-index ] || git clone -b configurable git://github.com/tonyg/pkg-index pkg-index
+[ -d pkg-index ] || git clone -b master git://github.com/racket/pkg-index pkg-index
 [ -d racket-pkg-website ] || git clone git://github.com/tonyg/racket-pkg-website racket-pkg-website
 
 set +x

@@ -39,7 +39,7 @@ RUN raco pkg install -i git://github.com/tonyg/racket-reloadable#cae2a141955bc2e
 RUN apt-get -y autoremove --purge gcc libc6-dev
 
 # Install code for package catalog server and website
-RUN git clone -b configurable git://github.com/tonyg/pkg-index /usr/local/pkg-index
+RUN git clone -b master git://github.com/racket/pkg-index /usr/local/pkg-index
 RUN git clone git://github.com/tonyg/racket-pkg-website /usr/local/racket-pkg-website
 
 # Configure services

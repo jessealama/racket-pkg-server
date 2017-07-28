@@ -3,7 +3,7 @@
 The Racket Package Catalog comprises two pieces of software that work
 in tandem:
 
- - [`pkg-index`](https://github.com/tonyg/pkg-index/tree/configurable)
+ - [`pkg-index`](https://github.com/racket/pkg-index/tree/master)
    a.k.a. "the backend"
 
  - [`racket-pkg-website`](https://github.com/tonyg/racket-pkg-website)
@@ -29,13 +29,9 @@ server instances.
 
 ## Git branches required
 
-The backend is currently deployed from the `configurable` branch
-rather than `master`, which is the original catalog server from before
-the separate frontend was integrated with it.
-
 You will want:
 
- - `configurable` from `pkg-index`
+ - `master` from `pkg-index`
  - `master` from `racket-pkg-website`
  - `master` from `racket-pkg-server`
 
